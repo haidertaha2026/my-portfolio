@@ -10,6 +10,7 @@ import random
 import requests
 import subprocess
 import sys
+import pickle
 
 # Page configuration
 st.set_page_config(
@@ -22,6 +23,8 @@ st.set_page_config(
 # Initialize session state
 if 'profile_pic' not in st.session_state:
     st.session_state.profile_pic = None
+if 'profile_pic_saved' not in st.session_state:
+    st.session_state.profile_pic_saved = False
 if 'show_game' not in st.session_state:
     st.session_state.show_game = False
 if 'show_chatbot' not in st.session_state:
@@ -39,30 +42,73 @@ if 'page' not in st.session_state:
 if 'sidebar_open' not in st.session_state:
     st.session_state.sidebar_open = True
 
-# ============================================
-# PERMANENT PROFILE PICTURE SETUP
-# ============================================
-def load_permanent_profile():
-    """Load permanent profile picture from file"""
+# File to store the profile picture
+PROFILE_PIC_FILE = "profile_pic_data.pkl"
+
+def save_profile_pic(image_data):
+    """Save profile picture to file"""
     try:
-        # Try to load from file
-        if os.path.exists("profile.jpg"):
-            return Image.open("profile.jpg")
-        elif os.path.exists("profile.png"):
-            return Image.open("profile.png")
-        elif os.path.exists("zoro_profile.jpg"):
-            return Image.open("zoro_profile.jpg")
-        else:
-            # Create a default image if no file exists
-            img = Image.new('RGB', (200, 200), color='#00ff88')
-            return img
+        with open(PROFILE_PIC_FILE, 'wb') as f:
+            pickle.dump(image_data, f)
+        return True
     except:
-        # Fallback to default
+        return False
+
+def load_profile_pic():
+    """Load profile picture from file"""
+    try:
+        if os.path.exists(PROFILE_PIC_FILE):
+            with open(PROFILE_PIC_FILE, 'rb') as f:
+                return pickle.load(f)
+        return None
+    except:
+        return None
+
+def get_permanent_profile():
+    """Get the permanent profile picture"""
+    # Check if we have a saved profile picture in session
+    if st.session_state.profile_pic is not None and st.session_state.profile_pic_saved:
+        return st.session_state.profile_pic
+    
+    # Try to load from file
+    saved_data = load_profile_pic()
+    if saved_data is not None:
+        st.session_state.profile_pic = saved_data
+        st.session_state.profile_pic_saved = True
+        return saved_data
+    
+    # Default profile (Zoro image placeholder)
+    try:
+        # Create a default profile image
         img = Image.new('RGB', (200, 200), color='#00ff88')
-        return img
+        from PIL import ImageDraw
+        draw = ImageDraw.Draw(img)
+        # Draw a simple face
+        draw.ellipse([50, 50, 150, 150], fill='#1a1a1a', outline='#00ff88', width=3)
+        draw.ellipse([70, 90, 90, 110], fill='#00ff88')
+        draw.ellipse([110, 90, 130, 110], fill='#00ff88')
+        # Draw a smile
+        draw.arc([70, 110, 130, 140], 0, 180, fill='#00ff88', width=2)
+        # Add text
+        draw.text((60, 170), "⚔️", fill='#00ff88')
+        
+        buffered = BytesIO()
+        img.save(buffered, format="PNG")
+        img_base64 = base64.b64encode(buffered.getvalue()).decode()
+        
+        st.session_state.profile_pic = f"data:image/png;base64,{img_base64}"
+        st.session_state.profile_pic_saved = True
+        save_profile_pic(st.session_state.profile_pic)
+        return st.session_state.profile_pic
+    except:
+        # Ultimate fallback
+        default = "iVBORw0KGgoAAAANSUhEUgAAAAEAAAABCAYAAAAfFcSJAAAADUlEQVR42mNk+M9QDwADhgGAWjR9awAAAABJRU5ErkJggg=="
+        st.session_state.profile_pic = f"data:image/png;base64,{default}"
+        st.session_state.profile_pic_saved = True
+        return st.session_state.profile_pic
 
 # Load permanent profile picture
-PERMANENT_PROFILE = load_permanent_profile()
+PERMANENT_PROFILE = get_permanent_profile()
 
 # Your Personal Information
 PERSONAL_INFO = {
@@ -108,7 +154,7 @@ To create innovative solutions using Python and AI that make a difference. I bel
 **📚 Currently Learning:**
 - Advanced Python concepts
 - Machine Learning and Deep Learning
-- Web Development with Streamlit and Django
+- Web Development with Streamlit
 - Game Development with Pygame
 
 **🎯 Future Goals:**
@@ -120,22 +166,17 @@ To create innovative solutions using Python and AI that make a difference. I bel
 I'm always open to new opportunities, collaborations, and learning experiences. Let's build something amazing together! 💪"""
 }
 
-# Skills
+# Skills - Updated without JavaScript, HTML/CSS, Flask, Django, NLP
 SKILLS = {
     "Programming Languages": [
-        {"name": "Python", "level": 95},
-        {"name": "JavaScript", "level": 75},
-        {"name": "HTML/CSS", "level": 80}
+        {"name": "Python", "level": 95}
     ],
     "AI & Machine Learning": [
         {"name": "Machine Learning", "level": 70},
-        {"name": "NLP", "level": 65},
         {"name": "Computer Vision", "level": 60}
     ],
     "Frameworks & Tools": [
         {"name": "Streamlit", "level": 90},
-        {"name": "Flask", "level": 75},
-        {"name": "Django", "level": 65},
         {"name": "Git", "level": 80}
     ],
     "Other Skills": [
@@ -145,12 +186,12 @@ SKILLS = {
     ]
 }
 
-# Projects
+# Projects - Updated without NLP
 PROJECTS = [
     {
         "title": "AI Chatbot",
-        "description": "An intelligent chatbot built using Python. Capable of understanding and responding to user queries with natural language processing.",
-        "technologies": ["Python", "NLP", "TensorFlow", "Streamlit"],
+        "description": "An intelligent chatbot built using Python. Capable of understanding and responding to user queries.",
+        "technologies": ["Python", "TensorFlow", "Streamlit"],
         "github": "https://github.com/yourusername/ai-chatbot",
         "demo": "chatbot"
     },
@@ -164,7 +205,7 @@ PROJECTS = [
     {
         "title": "Portfolio Website",
         "description": "A professional portfolio website built with Streamlit to showcase projects, skills, and achievements.",
-        "technologies": ["Python", "Streamlit", "HTML/CSS"],
+        "technologies": ["Python", "Streamlit"],
         "github": "https://github.com/yourusername/portfolio",
         "demo": "https://yourdemo.com"
     }
@@ -208,11 +249,10 @@ EDUCATION = [
     }
 ]
 
-# Certifications
+# Certifications - Updated without Web Development Basics
 CERTIFICATIONS = [
     "Python Programming",
     "Introduction to AI",
-    "Web Development Basics",
     "Streamlit Framework"
 ]
 
@@ -335,7 +375,7 @@ def render_sidebar():
         with col1:
             st.metric("Projects", "3+")
         with col2:
-            st.metric("Skills", "12+")
+            st.metric("Skills", "8+")
         
         # Social links
         st.markdown("### 🔗 Connect")
@@ -360,7 +400,7 @@ def render_sidebar():
             st.session_state.sidebar_open = False
             st.rerun()
 
-# Chatbot Functions
+# Chatbot Functions (Simplified without NLP)
 def get_chatbot_response(user_input, chat_history):
     """Get response from AI chatbot"""
     
@@ -388,10 +428,10 @@ What would you like to know? 💡"""
 Taha is highly skilled in Python with 95% proficiency. Here's what he can do:
 
 **Python Expertise:**
-- Web Development (Streamlit, Flask, Django)
+- Web Development with Streamlit
 - AI & Machine Learning
 - Data Analysis & Visualization
-- Game Development (Pygame)
+- Game Development with Pygame
 - API Development
 
 **Fun Fact:** Taha started learning Python at age 11 and has been building amazing projects ever since!
@@ -405,13 +445,12 @@ Taha has been diving deep into AI technologies:
 
 **AI Skills:**
 - Machine Learning (70%)
-- Natural Language Processing (65%)
 - Computer Vision (60%)
 - Building AI Chatbots
 - Working with LLMs
 
 **Projects:**
-1. This AI Chatbot - built with Python and NLP
+1. This AI Chatbot - built with Python
 2. Machine Learning models for predictions
 3. Computer vision applications
 
@@ -422,7 +461,6 @@ Want to learn more about AI? Ask me anything! 🎯"""
 
 **Featured Projects:**
 1. 🤖 **AI Chatbot** - You're using it right now!
-   - Natural language processing
    - Intelligent responses
    - 5 free questions demo
 
@@ -457,15 +495,13 @@ Age is just a number when you have passion and dedication! 🌟"""
 **Core Skills:**
 - 🐍 Python: 95% (Expert)
 - 🤖 AI/ML: 70% (Advanced)
-- 🌐 Web Dev: 80% (Advanced)
 - 🎯 Problem Solving: 85% (Expert)
 - 💪 Teamwork: 80% (Advanced)
 
 **Certifications:**
 1. Python Programming
 2. Introduction to AI
-3. Web Development Basics
-4. Streamlit Framework
+3. Streamlit Framework
 
 He's constantly learning and improving! 📚"""
     
@@ -1680,28 +1716,80 @@ def render_header():
     with col1:
         st.markdown('<div class="profile-image-container">', unsafe_allow_html=True)
         
-        # Use permanent profile picture
+        # Show the permanent profile picture
         if st.session_state.profile_pic is not None:
-            img = Image.open(st.session_state.profile_pic)
-            img = img.resize((200, 200))
-            img_base64 = image_to_base64(img)
             st.markdown(f"""
-                <img src="data:image/png;base64,{img_base64}" 
+                <img src="{st.session_state.profile_pic}" 
                      class="profile-image" 
                      alt="Taha's Profile Picture">
             """, unsafe_allow_html=True)
         else:
-            # Use the permanent profile image
-            img = PERMANENT_PROFILE
-            img = img.resize((200, 200))
-            img_base64 = image_to_base64(img)
-            st.markdown(f"""
-                <img src="data:image/png;base64,{img_base64}" 
-                     class="profile-image" 
-                     alt="Taha's Profile Picture">
-            """, unsafe_allow_html=True)
+            # Use the permanent profile from file
+            img_data = load_profile_pic()
+            if img_data is not None:
+                st.markdown(f"""
+                    <img src="{img_data}" 
+                         class="profile-image" 
+                         alt="Taha's Profile Picture">
+                """, unsafe_allow_html=True)
+            else:
+                # Fallback to default avatar
+                st.markdown("""
+                    <div class="default-avatar">
+                        ⚔️
+                    </div>
+                """, unsafe_allow_html=True)
         
         st.markdown('</div>', unsafe_allow_html=True)
+        
+        # Upload button - once uploaded, it stays fixed
+        with st.expander("📸 Upload Profile Picture (Fixed)", expanded=False):
+            st.markdown('<div class="upload-section">', unsafe_allow_html=True)
+            st.info("💡 **Upload once - it stays forever!** The picture will be saved permanently.")
+            
+            uploaded_file = st.file_uploader(
+                "Choose a photo...",
+                type=["jpg", "jpeg", "png", "gif"],
+                key="profile_uploader_permanent"
+            )
+            
+            if uploaded_file is not None:
+                # Convert to base64
+                img = Image.open(uploaded_file)
+                # Resize to 200x200
+                img = img.resize((200, 200))
+                buffered = BytesIO()
+                img.save(buffered, format="PNG")
+                img_base64 = base64.b64encode(buffered.getvalue()).decode()
+                img_data = f"data:image/png;base64,{img_base64}"
+                
+                # Save permanently
+                if save_profile_pic(img_data):
+                    st.session_state.profile_pic = img_data
+                    st.session_state.profile_pic_saved = True
+                    st.success("✅ Profile picture uploaded and saved permanently!")
+                    st.balloons()
+                    st.rerun()
+                else:
+                    st.error("❌ Failed to save profile picture. Please try again.")
+            
+            # Show current picture info
+            if st.session_state.profile_pic_saved:
+                st.success("✅ Profile picture is saved permanently!")
+                if st.button("🔄 Reset to Default", key="reset_profile"):
+                    # Remove the saved picture
+                    if os.path.exists(PROFILE_PIC_FILE):
+                        os.remove(PROFILE_PIC_FILE)
+                    st.session_state.profile_pic = None
+                    st.session_state.profile_pic_saved = False
+                    st.rerun()
+            
+            st.markdown("""
+                <p style="color: #999999; font-size: 0.8rem; margin-top: 0.5rem;">
+                    💡 Once uploaded, the picture stays even after page refresh!
+                </p>
+            """, unsafe_allow_html=True)
+            st.markdown('</div>', unsafe_allow_html=True)
     
     with col2:
         st.markdown(f'<div class="main-title">{PERSONAL_INFO["name"]}</div>', unsafe_allow_html=True)
@@ -1740,30 +1828,44 @@ def render_about():
     # Profile header with image and name
     col1, col2 = st.columns([1, 3])
     with col1:
+        # Show the permanent profile picture
         if st.session_state.profile_pic is not None:
-            img = Image.open(st.session_state.profile_pic)
-            img = img.resize((150, 150))
-            img_base64 = image_to_base64(img)
             st.markdown(f"""
                 <div style="text-align: center;">
-                    <img src="data:image/png;base64,{img_base64}" 
-                         style="border-radius: 50%; width: 150px; height: 150px; border: 5px solid #00ff88; box-shadow: 0 10px 30px rgba(0, 255, 136, 0.3);">
-                </div>
-            """, unsafe_allow_html=True)
-        else:
-            # Use permanent profile image
-            img = PERMANENT_PROFILE
-            img = img.resize((150, 150))
-            img_base64 = image_to_base64(img)
-            st.markdown(f"""
-                <div style="text-align: center;">
-                    <img src="data:image/png;base64,{img_base64}" 
+                    <img src="{st.session_state.profile_pic}" 
                          style="border-radius: 50%; width: 150px; height: 150px; border: 5px solid #00ff88; box-shadow: 0 10px 30px rgba(0, 255, 136, 0.3);">
                     <div style="margin-top: 0.5rem;">
                         <span style="background: #00ff88; color: #1a1a1a; padding: 0.2rem 1rem; border-radius: 20px; font-size: 0.8rem; font-weight: 600;">⭐ Verified</span>
                     </div>
                 </div>
             """, unsafe_allow_html=True)
+        else:
+            img_data = load_profile_pic()
+            if img_data is not None:
+                st.markdown(f"""
+                    <div style="text-align: center;">
+                        <img src="{img_data}" 
+                             style="border-radius: 50%; width: 150px; height: 150px; border: 5px solid #00ff88; box-shadow: 0 10px 30px rgba(0, 255, 136, 0.3);">
+                        <div style="margin-top: 0.5rem;">
+                            <span style="background: #00ff88; color: #1a1a1a; padding: 0.2rem 1rem; border-radius: 20px; font-size: 0.8rem; font-weight: 600;">⭐ Verified</span>
+                        </div>
+                    </div>
+                """, unsafe_allow_html=True)
+            else:
+                st.markdown("""
+                    <div style="text-align: center;">
+                        <div style="background: linear-gradient(135deg, #00cc77 0%, #00ff88 100%); 
+                                    border-radius: 50%; width: 150px; height: 150px; 
+                                    display: flex; align-items: center; justify-content: center; 
+                                    margin: auto; font-size: 4rem; color: #1a1a1a; 
+                                    border: 5px solid #00ff88; box-shadow: 0 10px 30px rgba(0, 255, 136, 0.3);">
+                            ⚔️
+                        </div>
+                        <div style="margin-top: 0.5rem;">
+                            <span style="background: #00ff88; color: #1a1a1a; padding: 0.2rem 1rem; border-radius: 20px; font-size: 0.8rem; font-weight: 600;">⭐ Verified</span>
+                        </div>
+                    </div>
+                """, unsafe_allow_html=True)
     
     with col2:
         st.markdown(f"""
@@ -1786,7 +1888,7 @@ def render_about():
                     <span class="info-badge">🎂 {PERSONAL_INFO['age']} Years</span>
                     <span class="info-badge">📚 {PERSONAL_INFO['class']}</span>
                     <span class="info-badge">🏆 3+ Projects</span>
-                    <span class="info-badge">💻 12+ Skills</span>
+                    <span class="info-badge">💻 8+ Skills</span>
                 </div>
                 <div style="display: flex; gap: 1rem; margin-top: 0.8rem;">
                     <a href="{PERSONAL_INFO['github']}" target="_blank" style="color: #00ff88; text-decoration: none; font-weight: 500;">🐙 GitHub</a>
@@ -1815,8 +1917,8 @@ def render_about():
         {"icon": "📍", "value": "PK", "label": "Pakistan"},
         {"icon": "🎯", "value": "2+", "label": "Coding Experience"},
         {"icon": "🚀", "value": "3+", "label": "Projects"},
-        {"icon": "🏆", "value": "4", "label": "Certifications"},
-        {"icon": "💻", "value": "12+", "label": "Skills"}
+        {"icon": "🏆", "value": "3", "label": "Certifications"},
+        {"icon": "💻", "value": "8+", "label": "Skills"}
     ]
     
     cols = st.columns(6)
@@ -1837,7 +1939,7 @@ def render_about():
         {"year": "2023", "icon": "🌟", "title": "Started at Aptech", "description": "Began formal education in software engineering and Python development"},
         {"year": "2023", "icon": "🐍", "title": "First Python Project", "description": "Built first simple Python applications and learned programming fundamentals"},
         {"year": "2024", "icon": "🤖", "title": "AI Exploration", "description": "Started learning AI and machine learning concepts"},
-        {"year": "2024", "icon": "💬", "title": "Chatbot Development", "description": "Built an AI chatbot using Python and NLP"},
+        {"year": "2024", "icon": "💬", "title": "Chatbot Development", "description": "Built an AI chatbot using Python"},
         {"year": "2025", "icon": "🌐", "title": "Portfolio Website", "description": "Created this professional portfolio using Streamlit"},
         {"year": "2025", "icon": "🎮", "title": "Game Development", "description": "Developed Aircraft Shooter game with Pygame"}
     ]
@@ -1870,7 +1972,7 @@ def render_about():
         {"icon": "🤖", "name": "AI & Machine Learning", "desc": "Exploring the future of technology"},
         {"icon": "🎮", "name": "Game Development", "desc": "Creating fun and interactive games"},
         {"icon": "📚", "name": "Reading", "desc": "Learning new things every day"},
-        {"icon": "🌐", "name": "Web Development", "desc": "Building beautiful websites"},
+        {"icon": "🌐", "name": "Web Development", "desc": "Building beautiful websites with Streamlit"},
         {"icon": "🚀", "name": "Space & Science", "desc": "Fascinated by the universe"}
     ]
     
@@ -1898,8 +2000,8 @@ def render_about():
         {"name": "Python", "level": 95},
         {"name": "Streamlit", "level": 90},
         {"name": "Problem Solving", "level": 85},
-        {"name": "Web Development", "level": 80},
-        {"name": "AI/ML", "level": 70}
+        {"name": "Machine Learning", "level": 70},
+        {"name": "Computer Vision", "level": 60}
     ]
     
     for skill in top_skills:
@@ -2054,8 +2156,8 @@ def render_stats():
     
     stats = [
         {"label": "Projects Completed", "value": "3+"},
-        {"label": "Programming Languages", "value": "3+"},
-        {"label": "Certifications", "value": "4"},
+        {"label": "Programming Languages", "value": "1+"},
+        {"label": "Certifications", "value": "3"},
         {"label": "Years Learning", "value": "2+"}
     ]
     
@@ -2113,9 +2215,9 @@ def render_analytics():
     with col2:
         st.metric("🚀 Projects", "3", "All Active")
     with col3:
-        st.metric("💻 Skills", "12", "↑ 2 this month")
+        st.metric("💻 Skills", "8", "↑ 2 this month")
     with col4:
-        st.metric("📚 Certifications", "4", "↑ 1 this month")
+        st.metric("📚 Certifications", "3", "↑ 1 this month")
     
     st.markdown("---")
     
@@ -2130,8 +2232,8 @@ def render_analytics():
     st.markdown("### 🎯 Skill Distribution")
     skill_data = {
         "Python": 95,
-        "Web Dev": 80,
-        "AI/ML": 70,
+        "Streamlit": 90,
+        "ML": 70,
         "Game Dev": 65,
         "Problem Solving": 85
     }
