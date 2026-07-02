@@ -1768,7 +1768,7 @@ def render_header():
                     if save_profile_pic(img_data):
                         st.session_state.profile_pic = img_data
                         st.session_state.profile_pic_saved = True
-                        st.success("✅ Profile picture uploaded and saved permanently!")
+                        st.success("")
                         st.balloons()
                         st.rerun()
                     else:
@@ -1793,7 +1793,6 @@ def render_header():
                         ✅ <strong>Profile picture is set!</strong>
                     </p>
                     <p style="color: #999999; font-size: 0.8rem; margin: 0.3rem 0 0 0;">
-                        The upload button is hidden because you already have a profile picture.
                     </p>
                 </div>
             """, unsafe_allow_html=True)
