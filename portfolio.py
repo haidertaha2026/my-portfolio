@@ -1790,7 +1790,7 @@ def render_header():
                             text-align: center;
                             margin-top: 0.5rem;">
                     <p style="color: #00ff88; margin: 0;">
-                        ✅ <strong>Profile picture is set!</strong>
+                         <strong></strong>
                     </p>
                     <p style="color: #999999; font-size: 0.8rem; margin: 0.3rem 0 0 0;">
                     </p>
