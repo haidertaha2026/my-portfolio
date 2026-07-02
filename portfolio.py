@@ -1780,22 +1780,7 @@ def render_header():
                     </p>
                 """, unsafe_allow_html=True)
                 st.markdown('</div>', unsafe_allow_html=True)
-        else:
-            # Show a message that profile is already set
-            st.markdown("""
-                <div style="background: rgba(0, 255, 136, 0.1); 
-                            padding: 1rem; 
-                            border-radius: 10px; 
-                            border: 1px solid #00ff88;
-                            text-align: center;
-                            margin-top: 0.5rem;">
-                    <p style="color: #00ff88; margin: 0;">
-                         <strong></strong>
-                    </p>
-                    <p style="color: #999999; font-size: 0.8rem; margin: 0.3rem 0 0 0;">
-                    </p>
-                </div>
-            """, unsafe_allow_html=True)
+
     
     with col2:
         st.markdown(f'<div class="main-title">{PERSONAL_INFO["name"]}</div>', unsafe_allow_html=True)
