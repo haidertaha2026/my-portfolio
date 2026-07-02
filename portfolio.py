@@ -1742,61 +1742,54 @@ def render_header():
         
         st.markdown('</div>', unsafe_allow_html=True)
         
-        # Show upload button only if no profile picture is saved
-        if not st.session_state.profile_pic_saved:
-            with st.expander("📸 Upload Profile Picture", expanded=True):
-                st.markdown('<div class="upload-section">', unsafe_allow_html=True)
-                st.info("💡 **Upload once - it stays forever!** The picture will be saved permanently.")
+        # Upload button - once uploaded, it stays fixed
+        with st.expander("📸 Upload Profile Picture (Fixed)", expanded=False):
+            st.markdown('<div class="upload-section">', unsafe_allow_html=True)
+            st.info("💡 **Upload once - it stays forever!** The picture will be saved permanently.")
+            
+            uploaded_file = st.file_uploader(
+                "Choose a photo...",
+                type=["jpg", "jpeg", "png", "gif"],
+                key="profile_uploader_permanent"
+            )
+            
+            if uploaded_file is not None:
+                # Convert to base64
+                img = Image.open(uploaded_file)
+                # Resize to 200x200
+                img = img.resize((200, 200))
+                buffered = BytesIO()
+                img.save(buffered, format="PNG")
+                img_base64 = base64.b64encode(buffered.getvalue()).decode()
+                img_data = f"data:image/png;base64,{img_base64}"
                 
-                uploaded_file = st.file_uploader(
-                    "Choose a photo...",
-                    type=["jpg", "jpeg", "png", "gif"],
-                    key="profile_uploader_permanent"
-                )
-                
-                if uploaded_file is not None:
-                    # Convert to base64
-                    img = Image.open(uploaded_file)
-                    # Resize to 200x200
-                    img = img.resize((200, 200))
-                    buffered = BytesIO()
-                    img.save(buffered, format="PNG")
-                    img_base64 = base64.b64encode(buffered.getvalue()).decode()
-                    img_data = f"data:image/png;base64,{img_base64}"
-                    
-                    # Save permanently
-                    if save_profile_pic(img_data):
-                        st.session_state.profile_pic = img_data
-                        st.session_state.profile_pic_saved = True
-                        st.success("✅ Profile picture uploaded and saved permanently!")
-                        st.balloons()
-                        st.rerun()
-                    else:
-                        st.error("❌ Failed to save profile picture. Please try again.")
-                
-                st.markdown("""
-                    <p style="color: #999999; font-size: 0.8rem; margin-top: 0.5rem;">
-                        💡 Once uploaded, the button will disappear and picture stays forever!
-                    </p>
-                """, unsafe_allow_html=True)
-                st.markdown('</div>', unsafe_allow_html=True)
-        else:
-            # Show a message that profile is already set
+                # Save permanently
+                if save_profile_pic(img_data):
+                    st.session_state.profile_pic = img_data
+                    st.session_state.profile_pic_saved = True
+                    st.success("✅ Profile picture uploaded and saved permanently!")
+                    st.balloons()
+                    st.rerun()
+                else:
+                    st.error("❌ Failed to save profile picture. Please try again.")
+            
+            # Show current picture info
+            if st.session_state.profile_pic_saved:
+                st.success("✅ Profile picture is saved permanently!")
+                if st.button("🔄 Reset to Default", key="reset_profile"):
+                    # Remove the saved picture
+                    if os.path.exists(PROFILE_PIC_FILE):
+                        os.remove(PROFILE_PIC_FILE)
+                    st.session_state.profile_pic = None
+                    st.session_state.profile_pic_saved = False
+                    st.rerun()
+            
             st.markdown("""
-                <div style="background: rgba(0, 255, 136, 0.1); 
-                            padding: 1rem; 
-                            border-radius: 10px; 
-                            border: 1px solid #00ff88;
-                            text-align: center;
-                            margin-top: 0.5rem;">
-                    <p style="color: #00ff88; margin: 0;">
-                        ✅ <strong>Profile picture is set!</strong>
-                    </p>
-                    <p style="color: #999999; font-size: 0.8rem; margin: 0.3rem 0 0 0;">
-                        The upload button is hidden because you already have a profile picture.
-                    </p>
-                </div>
+                <p style="color: #999999; font-size: 0.8rem; margin-top: 0.5rem;">
+                    💡 Once uploaded, the picture stays even after page refresh!
+                </p>
             """, unsafe_allow_html=True)
+            st.markdown('</div>', unsafe_allow_html=True)
     
     with col2:
         st.markdown(f'<div class="main-title">{PERSONAL_INFO["name"]}</div>', unsafe_allow_html=True)
